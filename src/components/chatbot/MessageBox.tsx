@@ -1,6 +1,8 @@
 import SingleMessage from "./SingleMessage";
-import { Message } from "../../redux/chatReducer";
+import { editMessageRequest, Message, sendDeleteMessageRequest } from "../../redux/chatReducer";
 import { useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../redux/store";
 
 type Props = {
 	messages: Message[];
@@ -8,6 +10,21 @@ type Props = {
 
 export default function MessageBox({ messages }: Props) {
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const dispatch = useDispatch<AppDispatch>();
+
+	// only delete user messages
+	const deleteMessage = (id: number) => {
+		dispatch(sendDeleteMessageRequest(id));
+	};
+
+	const editMessageHandler = (id: number, content: string) => {
+		// Dispatch edit thunk
+		dispatch(editMessageRequest({ messageContent: content, messageId: id }));
+	};
+
+	const editMessage = (id: number) => (contentUpdate: string) => {
+		editMessageHandler(id, contentUpdate);
+	};
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,6 +44,9 @@ export default function MessageBox({ messages }: Props) {
 							isBot={message.isBot}
 							message={message.content}
 							avatar={message.isBot ? "/bot.png" : "/boy.png"}
+							messageId={message.id}
+							deleteMessage={!message.isBot ? () => deleteMessage(message.id) : undefined}
+							editMessage={!message.isBot ? editMessage(message.id) : undefined}
 						/>
 					))}
 					<div
